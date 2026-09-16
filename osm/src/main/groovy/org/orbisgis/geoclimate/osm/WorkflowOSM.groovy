@@ -574,6 +574,7 @@ Map osm_processing(JdbcDataSource h2gis_datasource, def processing_parameters, d
                 def noise_indicators = processing_parameters.noise_indicators
                 if (noise_indicators) {
                     if (noise_indicators.ground_acoustic) {
+                        //TODO
                         def outputTable = Geoindicators.SpatialUnits.createGrid(h2gis_datasource, outputZoneGeometry, 200, 200)
                         String ground_acoustic = Geoindicators.NoiseIndicators.groundAcousticAbsorption(h2gis_datasource, outputTable, "id_grid",
                                 results.building, roadTableName, hydrographicTableName,
@@ -592,6 +593,7 @@ Map osm_processing(JdbcDataSource h2gis_datasource, def processing_parameters, d
                     outputGrid = grid_indicators_params.output
                     int x_size
                     int y_size
+                    double angle = 0
                     def rowCol = grid_indicators_params.rowCol
                     def grid_zone
                     if(grid_indicators_params.domain=="zone_extended") { //Must the forced due to the zone parameter
@@ -614,13 +616,15 @@ Map osm_processing(JdbcDataSource h2gis_datasource, def processing_parameters, d
                         y_size = grid_indicators_params.y_size
                     }
 
+                    angle = grid_indicators_params.angle
+
                     // Define the priorities and superposition for land fraction (for grid indicators)
                     def land_priorities_grid = Geoindicators.WorkflowGeoIndicators.getSurfacePriorities()
                     def land_superposition_grid = Geoindicators.WorkflowGeoIndicators.getSurfaceSuperpositions()
 
                     //We must compute the best number of row and col
                     String grid = Geoindicators.WorkflowGeoIndicators.createGrid(h2gis_datasource, grid_zone,
-                            x_size, y_size, srid, rowCol)
+                            x_size, y_size, srid, rowCol, angle)
                     String rasterizedIndicators = Geoindicators.WorkflowGeoIndicators.rasterizeIndicators(h2gis_datasource, grid,
                             grid_indicators_params.indicators,
                             land_superposition_grid, land_priorities_grid,
@@ -886,6 +890,7 @@ def extractProcessingParameters(def processing_parameters) throws Exception {
                     "y_size"    : 100,
                     "output"    : "fgb",
                     "rowCol"    : null, //Default to null
+                    "angle"     : 0.0,
                     "indicators": ["LAND_TYPE_FRACTION",
                                     "BUILDING_HEIGHT",
                                     "STREET_WIDTH"]
@@ -940,6 +945,7 @@ def extractProcessingParameters(def processing_parameters) throws Exception {
                             "y_size"    : y_size,
                             "output"    : "fgb",
                             "rowCol"    : null, //Default to null
+                            "angle"     : 0.0,
                             "indicators": allowedOutputIndicators
                     ]
                     def grid_output = grid_indicators.output
@@ -958,6 +964,12 @@ def extractProcessingParameters(def processing_parameters) throws Exception {
                     if (grid_rowCol!=null) {
                         grid_indicators_tmp.rowCol = grid_rowCol
                     }
+
+                    def grid_angle = Geoindicators.DataUtils.asFloat(grid_indicators.angle)
+                    if (grid_angle!=null) {
+                        grid_indicators_tmp.angle = grid_angle
+                    }
+
                     def lcz_lod = Geoindicators.DataUtils.asInteger(grid_indicators.lcz_lod)
                     if (lcz_lod!=null) {
                         if (lcz_lod < 0 && lcz_lod > 10) {
