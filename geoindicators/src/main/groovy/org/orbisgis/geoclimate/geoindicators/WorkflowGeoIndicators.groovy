@@ -2268,7 +2268,7 @@ String cutBuilding(JdbcDataSource datasource, String grid, String building) thro
  * @param y_size y size of the grid
  * @param srid used to reproject the grid
  * @param outputTableName the name of grid  table
- * @param angle The angle of grid rotation in radian
+ * @param angle The angle of grid rotation in degree
  * @return
  */
 String createGrid(JdbcDataSource datasource,

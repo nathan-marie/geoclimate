@@ -536,7 +536,7 @@ String spatialJoin(JdbcDataSource datasource, String sourceTable, String targetT
  * @param tableName A Table that contains the geometry of the grid
  * @param datasource A connexion to a database (H2GIS, POSTGIS, ...) where are stored the input Table and in which
  *        the resulting database will be stored
- * @param angle The angle of grid rotation in radian
+ * @param angle The angle of grid rotation in degree
  * @return The name of the created table
  *
  * @author Emmanuel Renault, CNRS, 2020
@@ -559,6 +559,8 @@ String createGrid(JdbcDataSource datasource, Geometry geometry, double deltaX,
     def BASENAME = "grid"
     def outputTableName = prefix prefixName, BASENAME
     datasource "DROP TABLE IF EXISTS $outputTableName;"
+
+    angle = Math.toRadians(angle) //Transform angle in degree to radian
 
     if (datasource instanceof H2GIS) {
         debug "Creating grid with H2GIS"
