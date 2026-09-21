@@ -577,7 +577,7 @@ String createGrid(JdbcDataSource datasource, Geometry geometry, double deltaX,
             def insertTable = "INSERT INTO $outputTableName VALUES (?, ?, ?, ?);"
             datasource.execute(createTable.toString())
             preparedStatement = outputConnection.prepareStatement(insertTable.toString())
-            def result = ST_MakeGrid.createGrid(outputConnection, ValueGeometry.getFromGeometry(geometry), deltaX, deltaY, rowCol, angle)
+            def result = ST_MakeGrid.createGrid(outputConnection, ValueGeometry.getFromGeometry(geometry), deltaX, deltaY, false, rowCol, angle)
             long batch_size = 0
             int batchSize = 1000
 
