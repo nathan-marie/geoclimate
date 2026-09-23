@@ -599,11 +599,7 @@ Map osm_processing(JdbcDataSource h2gis_datasource, def processing_parameters, d
                     if(grid_indicators_params.domain=="zone_extended") { //Must the forced due to the zone parameter
                         grid_zone = h2gis_datasource.getExtent(utm_extended_bbox_table)
                     }else if(grid_indicators_params.domain==null){
-                        if(domain=="zone"){
-                            grid_zone = h2gis_datasource.getExtent(utm_zone_table)
-                        }else if(domain=="zone_extended"){
-                            grid_zone = h2gis_datasource.getExtent(utm_extended_bbox_table)
-                        }
+                        grid_zone = outputZoneGeometry
                     }
 
                     x_size = grid_indicators_params.x_size

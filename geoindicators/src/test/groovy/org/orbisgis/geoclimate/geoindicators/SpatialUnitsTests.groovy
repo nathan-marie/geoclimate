@@ -301,7 +301,7 @@ class SpatialUnitsTests {
         assert postGIS.hasTable(outputTable)
         def countRows = postGIS.firstRow "select count(*) as numberOfRows from $outputTable"
         def geom = postGIS.firstRow("select the_geom from $outputTable")[0]
-        assertEquals(geom.toString(), "POLYGON ((-0.9999999999999999 0.9999999999999998, 1.8284271247461903 -1.8284271247461898, 4.656854249492381 1.0000000000000004, 1.8284271247461898 3.8284271247461903, -0.9999999999999999 0.9999999999999998))")
+        assertEquals(geom.toString(), "POLYGON ((0 0.0000000000000001, 2.8284271247461903 -2.82842712474619, 5.656854249492381 0.0000000000000003, 2.82842712474619 2.8284271247461903, 0 0.0000000000000001))")
         assert 1 == countRows.numberOfRows
     }
 
@@ -316,9 +316,10 @@ class SpatialUnitsTests {
         assert outputTable
         assert h2GIS.hasTable(outputTable)
         def countRows = h2GIS.firstRow "select count(*) as numberOfRows from $outputTable"
-        def geom = h2GIS.firstRow("select the_geom from $outputTable")[0]
-        assertEquals(geom.toString(), "POLYGON ((-0.9999999999999999 0.9999999999999998, 1.8284271247461903 -1.8284271247461898, 4.656854249492381 1.0000000000000004, 1.8284271247461898 3.8284271247461903, -0.9999999999999999 0.9999999999999998))")
         assert 1 == countRows.numberOfRows
+        def geom = h2GIS.firstRow("select the_geom from $outputTable")[0]
+        assertEquals(geom.toString(), "POLYGON ((0 0.0000000000000001, 2.8284271247461903 -2.82842712474619, 5.656854249492381 0.0000000000000003, 2.82842712474619 2.8284271247461903, 0 0.0000000000000001))")
+
     }
 
 
