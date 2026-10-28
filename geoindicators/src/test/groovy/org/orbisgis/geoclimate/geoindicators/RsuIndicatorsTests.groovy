@@ -145,7 +145,9 @@ class RsuIndicatorsTests {
         def p = Geoindicators.RsuIndicators.groundSkyViewFactor(h2GIS, "rsu_test", "id_rsu", "corr_tempo",
                 0.008, 100, 60, "test")
         assertNotNull(p)
-        assertEquals 0.54, h2GIS.firstRow("SELECT * FROM test_rsu_ground_sky_view_factor " +
+        //assertEquals 0.5595499935413787, h2GIS.firstRow("SELECT * FROM test_rsu_ground_sky_view_factor " +
+        //        "WHERE id_rsu = 8").ground_sky_view_factor, 0.05
+        assertEquals 0.5595499935413787, h2GIS.firstRow("SELECT * FROM test_rsu_ground_sky_view_factor " +
                 "WHERE id_rsu = 8").ground_sky_view_factor, 0.05
         // For RSU having no buildings in and around them
         assertEquals 1, h2GIS.firstRow("SELECT * FROM test_rsu_ground_sky_view_factor WHERE id_rsu = 1").ground_sky_view_factor

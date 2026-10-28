@@ -437,6 +437,78 @@ String formatGrid4Target(JdbcDataSource datasource, String gridTable, float reso
     }
 }
 
+//Déplacer ??
+String formatGrid4WRF(JdbcDataSource datasource, String gridTable, float resolution, Map superpositions) throws Exception{
+    // Put to upper case the land type defined in the superposition map
+    def superpositions_upper = [:]
+    superpositions.each {key, values ->
+        superpositions_upper[key.toUpperCase()] = values.collect { it.toUpperCase() }
+    }
+
+    //Format target landcover
+    def grid_wrf = postfix("grid_wrf")
+    try {
+
+        datasource.execute("""
+                            DROP TABLE IF EXISTS ${grid_wrf};
+                            CREATE TABLE ${grid_wrf} as SELECT
+                            THE_GEOM,
+                            ID_COL, ID_ROW,
+                            BUILDING_FRACTION + HIGH_VEGETATION_BUILDING_FRACTION as "LP_URB2d",
+                            AVG_HEIGHT_ROOF as "MH_URB2d",
+                            STD_HEIGHT_ROOF as "STDH_URB2D",
+                            AVG_HEIGHT_ROOF_AREA_WEIGHTED as "HGT_URB2D",
+                            
+                            BUILDING_FRACTION + FREE_EXTERNAL_FACADE_DENSITY as "LB_URB2D",
+                            BUILDING_FRACTION + HIGH_VEGETATION_BUILDING_FRACTION + ROAD_FRACTION + HIGH_VEGETATION_ROAD_FRACTION + IMPERVIOUS_FRACTION + HIGH_VEGETATION_IMPERVIOUS_FRACTION as "Urban_Fraction",
+                            
+                            "FRONTAL_AREA_INDEX_H0_75_D0_45" as "LF_URB2D 1",
+                            "FRONTAL_AREA_INDEX_H0_75_D45_90" as "LF_URB2D 2",
+                            "FRONTAL_AREA_INDEX_H0_75_D90_135" as "LF_URB2D 3",
+                            "FRONTAL_AREA_INDEX_H0_75_D135_180" as "LF_URB2D 4",
+                            
+                            ROOF_FRACTION_DISTRIBUTION_H0_5 as "HI_URB2D 1",
+                            ROOF_FRACTION_DISTRIBUTION_H5_10 as "HI_URB2D 2",
+                            ROOF_FRACTION_DISTRIBUTION_H10_15 as "HI_URB2D 3",
+                            ROOF_FRACTION_DISTRIBUTION_H15_20 as "HI_URB2D 4",
+                            ROOF_FRACTION_DISTRIBUTION_H20_25 as "HI_URB2D 5",
+                            ROOF_FRACTION_DISTRIBUTION_H25_30 as "HI_URB2D 6",
+                            ROOF_FRACTION_DISTRIBUTION_H30_35 as "HI_URB2D 7",
+                            ROOF_FRACTION_DISTRIBUTION_H35_40 as "HI_URB2D 8",
+                            ROOF_FRACTION_DISTRIBUTION_H40_45 as "HI_URB2D 9",
+                            ROOF_FRACTION_DISTRIBUTION_H45_50 as "HI_URB2D 10",
+                            ROOF_FRACTION_DISTRIBUTION_H50_55 as "HI_URB2D 11",
+                            ROOF_FRACTION_DISTRIBUTION_H55_60 as "HI_URB2D 12",
+                            ROOF_FRACTION_DISTRIBUTION_H60_65 as "HI_URB2D 13",
+                            ROOF_FRACTION_DISTRIBUTION_H65_70 as "HI_URB2D 14",
+                            ROOF_FRACTION_DISTRIBUTION_H70_75 as "HI_URB2D 15"
+                            FROM ${gridTable} 
+                            """)
+
+        return grid_wrf
+    }catch (SQLException e){
+        println("! ERREUR !")
+        //We create an empty table
+        datasource.execute("""CREATE TABLE $grid_wrf (ID_COL INT, ID_ROW INT, THE_GEOM GEOMETRY,
+        "LP_URB2d" VARCHAR, "MH_URB2d" VARCHAR, "STDH_URB2D" VARCHAR, "HGT_URB2D" VARCHAR,
+        "LB_URB2D" VARCHAR, "LF_URB2D 1" VARCHAR, "LF_URB2D 2" VARCHAR , "LF_URB2D 3" VARCHAR, "LF_URB2D 4" VARCHAR,
+        "HI_URB2D 5" VARCHAR, "HI_URB2D 6" VARCHAR, "HI_URB2D 7" VARCHAR , "HI_URB2D 8" VARCHAR, "HI_URB2D 9" VARCHAR,
+        "HI_URB2D 10" VARCHAR, "HI_URB2D 11" VARCHAR, "HI_URB2D 12" VARCHAR , "HI_URB2D 13" VARCHAR, "HI_URB2D 14" VARCHAR,
+        "HI_URB2D 15" VARCHAR, "Urban_Fraction" VARCHAR)
+        """)
+    }
+}
+
+
+/*
+
+                             "FRONTAL_AREA_INDEX_H0_75_D0_45" as "LF_URB2D 1", //Fonctionne
+
+                            PROJECTED_FACADE_AREA_DISTRIBUTION_H0_75_D45_90 as "LF_URB2D 2",
+                            cell_frontal_area_index_distribution_Hx_y_Dw_z`
+                            FRONTAL_AREA_INDEX_H${layer_bottom}_${layer_top}_D${k * angleRangeDeg}_${(k + 1) * angleRangeDeg}"
+ */
+
 /**
  *  Compute the number of warm LCZ on a sliding window
  *  The sliding window is defined by a step size from the center of the cells.

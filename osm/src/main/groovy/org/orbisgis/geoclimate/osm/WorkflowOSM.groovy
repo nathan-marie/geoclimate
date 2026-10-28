@@ -281,6 +281,7 @@ Map workflow(def input) throws Exception {
                                     "urban_sprawl_areas",
                                     "urban_cool_areas",
                                     "grid_target",
+                                    "grid_wrf",
                                     "zone_extended"]
 
     //Get processing parameters
@@ -648,6 +649,11 @@ Map osm_processing(JdbcDataSource h2gis_datasource, def processing_parameters, d
                             results.put("grid_target", Geoindicators.GridIndicators.formatGrid4Target(h2gis_datasource, rasterizedIndicators,
                                     x_size, land_superposition_grid))
                         }
+                        //We must transform the grid_indicators to produce the wrf land input
+                        else if(rsu_indicators_params.indicatorUse.contains("WRF")){
+                            results.put("grid_wrf", Geoindicators.GridIndicators.formatGrid4WRF(h2gis_datasource, rasterizedIndicators,
+                                    x_size, land_superposition_grid))
+                        }
                         info("End computing grid_indicators")
                     }
                 }
@@ -823,15 +829,19 @@ def extractProcessingParameters(def processing_parameters) throws Exception {
         //Check for rsu indicators
         def rsu_indicators = processing_parameters.rsu_indicators
         def target_grid_indicators =false
+        def wrf_grid_indicators = false
         if (rsu_indicators) {
             def indicatorUseP = rsu_indicators.indicatorUse*.toUpperCase()
             if (indicatorUseP && indicatorUseP in List) {
-                def allowed_rsu_indicators = ["LCZ", "UTRF", "TEB", "TARGET"]
+                def allowed_rsu_indicators = ["LCZ", "UTRF", "TEB", "TARGET", "WRF"]
                 def allowedOutputRSUIndicators = allowed_rsu_indicators.intersect(indicatorUseP)
                 if (allowedOutputRSUIndicators) {
                     //We must update the grid indicators for TARGET schema
                     if(indicatorUseP.contains("TARGET")){
                         target_grid_indicators = true
+                    }
+                    else if(indicatorUseP.contains("WRF")){
+                        wrf_grid_indicators = true
                     }
                     rsu_indicators_default.indicatorUse = indicatorUseP
                 } else {
@@ -892,6 +902,15 @@ def extractProcessingParameters(def processing_parameters) throws Exception {
             ]
             defaultParameters.put("grid_indicators", grid_indicators_tmp)
         }
+        else if(wrf_grid_indicators && !grid_indicators){
+            def grid_indicators_tmp = [
+                    "x_size"    : 100,
+                    "y_size"    : 100,
+                    "output"    : "fgb",
+                    "indicators": ["BUILDING_HEIGHT", "STREET_WIDTH", "BUILDING_HEIGHT_DISTRIBUTION", "FRONTAL_AREA_INDEX", "PROJECTED_FACADE_DENSITY_DIR"]
+            ]
+            defaultParameters.put("grid_indicators", grid_indicators_tmp)
+        }
         else if (grid_indicators) {
             def x_size = grid_indicators.x_size
             def y_size = grid_indicators.y_size
@@ -929,6 +948,9 @@ def extractProcessingParameters(def processing_parameters) throws Exception {
                         allowedOutputIndicators.addAll(["LAND_TYPE_FRACTION",
                                                         "BUILDING_HEIGHT_WEIGHTED",
                                                         "STREET_WIDTH"])
+                    }
+                    else if(wrf_grid_indicators){
+                        allowedOutputIndicators.addAll(["BUILDING_HEIGHT", "STREET_WIDTH", "BUILDING_HEIGHT_DISTRIBUTION", "FRONTAL_AREA_INDEX", "PROJECTED_FACADE_DENSITY_DIR"])
                     }
 
                     if(x_size != y_size){
@@ -1028,7 +1050,7 @@ def saveOutputFiles(def h2gis_datasource, def id_zone, def results, def outputFi
 
     //We must save each files
     outputFiles.each { it->
-        if (it in ["grid_indicators", "grid_target"]) {
+        if (it in ["grid_indicators", "grid_target", "grid_wrf"]) {
             if (outputGrid == "fgb") {
                 Geoindicators.WorkflowUtilities.saveInFile(results."$it", "${subFolder.getAbsolutePath() + File.separator + it}.fgb", h2gis_datasource, outputSRID, reproject, null,deleteOutputData)
                 } else if (outputGrid == "asc") {

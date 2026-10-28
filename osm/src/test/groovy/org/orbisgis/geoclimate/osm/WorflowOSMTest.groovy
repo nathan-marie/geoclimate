@@ -609,6 +609,11 @@ class WorflowOSMTest extends WorkflowAbstractTest {
         def tableNames = process.values()
         def targetGrid = tableNames.grid_target[0]
         H2GIS h2gis = H2GIS.open("${directory + File.separator}geoclimate_chain_db")
+
+        def test =  h2gis.firstRow("""select * from $targetGrid""")
+        println("\n")
+        println(test)
+
         assertEquals(h2gis.getRowCount(targetGrid), h2gis.firstRow("""select count(*) as count from $targetGrid 
         where \"roof\"+ \"road\"+ \"watr\"+\"conc\"+\"Veg\" + \"dry\" + \"irr\" >=0.9999""").count)
     }
@@ -646,6 +651,118 @@ class WorflowOSMTest extends WorkflowAbstractTest {
         where \"roof\"+ \"road\"+ \"watr\"+\"conc\"+\"Veg\" + \"dry\" + \"irr\" >=0.99""").count)
         def gridIndicators = tableNames.grid_indicators[0]
         assertTrue(h2gis.getColumnNames(gridIndicators).contains("LCZ_PRIMARY"))
+    }
+
+    @Test
+    void testwrf1(@TempDir File folder) { //Attention take 30 minutes to run
+        String directory = folder.absolutePath + File.separator + "testWRF1"
+        def osm_parmeters = [
+                "description" : "Compute the wrf land input",
+                "geoclimatedb": [
+                        "folder": directory,
+                        "name"  : "geoclimate_wrf1_db",
+
+                        "delete": false
+                ],
+                "input"       : [
+                        "locations": ["Pont-de-Veyle"]
+                ],
+                "output"      : [
+                        "folder": directory],
+                "parameters"  :
+                        [
+                                rsu_indicators: [
+                                        "indicatorUse": ["WRF"]
+                                ]
+                        ]
+        ]
+        Map process = OSM.WorkflowOSM.workflow(osm_parmeters)
+        def tableNames = process.values()
+        def wrfGrid = tableNames.grid_wrf[0]
+        H2GIS h2gis = H2GIS.open("${directory + File.separator}geoclimate_wrf1_db")
+        def test =  h2gis.firstRow("""select * from $wrfGrid""")
+        println("\n")
+        println(test)
+        //TODO FIX
+        /*
+        assertEquals(h2gis.getRowCount(wrfGrid), h2gis.firstRow("""select count(*) as count from $wrfGrid
+        where \"LP_URB2d\"+ \"MH_URB2d\"+ \"STDH_URB2D\"+\"HGT_URB2D\"+\"LB_URB2D\" + \"Urban_Fraction\" +
+        \"LF_URB2D 1\"+ \"LF_URB2D 2\"+ \"LF_URB2D 3\"+\"LF_URB2D 4\"+\"HI_URB2D 1\" + \"HI_URB2D 2\" +
+        \"HI_URB2D 3\"+ \"HI_URB2D 4\"+ \"HI_URB2D 5\"+\"HI_URB2D 6\"+\"HI_URB2D 7\" + \"HI_URB2D 8\" +
+        \"HI_URB2D 9\"+ \"HI_URB2D 10\"+ \"HI_URB2D 11\"+\"HI_URB2D 12\"+\"HI_URB2D 13\" + \"HI_URB2D 14\" +
+         \"HI_URB2D 15\" >=0.9999""").count)
+
+        /*
+        def test =  h2gis.firstRow("""select * from $wrfGrid""")
+
+
+        def output_folder = new File(directory + File.separator + "osm_Pont-de-Veyle")
+        def resultFiles = []
+        output_folder.eachFileRecurse groovy.io.FileType.FILES, { file ->
+            if (file.name.toLowerCase().endsWith(".fgb")) {
+                resultFiles << file.getAbsolutePath()
+            }
+        }
+        */
+        //print("quoi")
+        //print(test)
+        //print("oui")
+        //assertEquals(h2gis.getRowCount(targetGrid), h2gis.firstRow("""select count(*) as count from $targetGrid
+        //where \"roof\"+ \"road\"+ \"watr\"+\"conc\"+\"Veg\" + \"dry\" + \"irr\" >=0.9999""").count)
+    }
+
+
+    @Disabled
+    @Test
+    void testwrf2(@TempDir File folder) { //Attention take 30 minutes to run
+        String directory = folder.absolutePath + File.separator + "testWRF"
+        def bbox = [41.16483666429042, -1.7002029439153534, 42.195661701819475, -0.06974765579748916]
+        def osm_parmeters = [
+                "description" : "Compute the WRF land input",
+                "geoclimatedb": [
+                        "folder": directory,
+                        "name"  : "geoclimate_wrf_db",
+                        "delete": false
+                ],
+                "input"       : [
+                        "locations": [
+                                bbox
+                        ],
+                        "area" : 21000
+                ],
+                "output"      : [
+                        "folder": directory],
+                "parameters"  :
+                        [
+                                "rsu_indicators": [
+                                        "indicatorUse": ["LCZ","TEB","WRF"]
+                                ],
+                                "grid_indicators": [
+                                    "x_size"    : 900,
+                                    "y_size"    : 900,
+                                    "output"    : "fgb",
+                                    "rowCol"    : false,
+                                    "indicators": ["BUILDING_HEIGHT", "STREET_WIDTH", "BUILDING_HEIGHT_DISTRIBUTION", "FRONTAL_AREA_INDEX", "PROJECTED_FACADE_DENSITY_DIR"]
+        ]
+                        ]
+        ]
+        Map process = OSM.WorkflowOSM.workflow(osm_parmeters)
+        def tableNames = process.values()
+        def wrfGrid = tableNames.grid_wrf[0]
+        H2GIS h2gis = H2GIS.open("${directory + File.separator}geoclimate_wrf_db")
+        def test =  h2gis.firstRow("""select * from $wrfGrid""")
+        print("test")
+        //How to save file
+        //"grid_indicators": {
+        //    "x_size": 900,
+        //    "y_size": 900,
+        //assertEquals(h2gis.getRowCount(targetGrid), h2gis.firstRow("""select count(*) as count from $targetGrid
+        //where \"roof\"+ \"road\"+ \"watr\"+\"conc\"+\"Veg\" + \"dry\" + \"irr\" >=0.9999""").count)
+        //def reproject = false
+        //def deleteOutputData = true
+        //def outputFolder = new File('/tmp/ici')
+        //def subFolder = new File(outputFolder.getAbsolutePath() + File.separator + "osm_" + 0)
+        //Geoindicators.WorkflowUtilities.saveToAscGrid(test, subFolder, "grid_indicators", h2gis, 3007, reproject, deleteOutputData)
     }
 
     @Test

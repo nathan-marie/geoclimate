@@ -627,6 +627,20 @@ String computeRSUIndicators(JdbcDataSource datasource, String buildingTable,
         finalTablesToJoin.put(roofAreaDist, columnIdRsu)
     }
 
+    /*
+    //TODO TEMPORAIRE
+    //On doit rasteriser données ?
+    if (indicatorUse*.toUpperCase().contains("WRF")) {
+        facadeDensListLayersBottom = [0, 10, 20, 30, 40, 50, 60, 70, 75] //Vérifier taille
+        facadeDensNumberOfDirection = 8
+        def projFacadeDist = Geoindicators.RsuIndicators.projectedFacadeAreaDistribution(datasource, buildingTable,
+                rsu, "id_rsu", facadeDensListLayersBottom,
+                facadeDensNumberOfDirection, temporaryPrefName)
+        finalTablesToJoin.put(projFacadeDist, columnIdRsu)
+    }
+     */
+
+
     // rsu_projected_facade_area_distribution
     if (indicatorUse*.toUpperCase().contains("LCZ") || indicatorUse*.toUpperCase().contains("TEB")) {
         if (!indicatorUse*.toUpperCase().contains("TEB")) {
@@ -2064,17 +2078,16 @@ String rasterizeIndicators(JdbcDataSource datasource,
         }
     }
 
-
     if (list_indicators_upper.contains("BUILDING_HEIGHT_DISTRIBUTION") && building) {
         if (!buildingCutted) {
             buildingCutted = cutBuilding(datasource, grid, building)
         }
         def roofFractionDistributionExact = Geoindicators.RsuIndicators.roofFractionDistributionExact(datasource,
                 grid, buildingCutted, grid_column_identifier,
-                [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50], false, prefixName)
+                [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75], false, prefixName)
         indicatorTablesToJoin.put(roofFractionDistributionExact, grid_column_identifier)
 
-    }
+    } //TODO TEMPORARY FIX CREATE OTHER FONCTION TO HANDLE MORE THAN 5O OR BETTER MORE PARAMETER
 
     if (list_indicators_upper.contains("FRONTAL_AREA_INDEX") && building) {
         if (!datasource.getTable(building).isEmpty()) {
@@ -2088,6 +2101,7 @@ String rasterizeIndicators(JdbcDataSource datasource,
                     createScalesRelationsGridBl, grid, grid_column_identifier,
                     [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50], 12, true, prefixName)
             indicatorTablesToJoin.put(frontalAreaIndexDistribution, grid_column_identifier)
+            //TODO TEMPORARY
         }
     }
 
@@ -2161,8 +2175,11 @@ String rasterizeIndicators(JdbcDataSource datasource,
 
     if (list_indicators_upper.intersect(["TERRAIN_ROUGHNESS", "PROJECTED_FACADE_DENSITY_DIR"]) && building) {
         def heightColumnName = "height_roof"
-        def facadeDensListLayersBottom = [0, 10, 20, 30, 40, 50]
-        def facadeDensNumberOfDirection = 12
+        //def facadeDensListLayersBottom = [0, 10, 20, 30, 40, 50]
+        //def facadeDensNumberOfDirection = 12
+        //TODO FAIRE VRAI CHANGEMENT AVEC FONCTION pour gérer paramètre
+        def facadeDensListLayersBottom = [0, 75] //Vérifier taille
+        def facadeDensNumberOfDirection = 8
         if (!createScalesRelationsGridBl) {
             // Create the relations between grid cells and buildings
             createScalesRelationsGridBl = Geoindicators.SpatialUnits.spatialJoin(datasource,
