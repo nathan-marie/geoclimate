@@ -1311,6 +1311,22 @@ Map computeAllGeoIndicators(JdbcDataSource datasource, String zone, String zone_
                     "zone"                  : zone,
                     "nb_building_updated": nb_building_updated]
         }
+        else if (indicatorUse.size() == 1 && indicatorUse.contains("WRF")) {
+            //Clean the System properties that stores intermediate table names
+            datasource.dropTable(getCachedTableNames())
+            clearTablesCache()
+            return ["building_indicators"  : buildingIndicatorsForHeightEst,
+                    "block_indicators"     : blockIndicatorsForHeightEst,
+                    "rsu_indicators"       : null,
+                    "rsu_lcz"              : null,
+                    "rsu_utrf_area"        : null,
+                    "rsu_utrf_floor_area"  : null,
+                    "building_utrf"        : null,
+                    "building"             : buildingTableName,
+                    "zone_extended"        : zone_extended,
+                    "zone"                  : zone,
+                    "nb_building_updated": nb_building_updated]
+        }
         def buildingForGeoCalc
         def blocksForGeoCalc
         def rsuForGeoCalc
